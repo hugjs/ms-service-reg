@@ -1,0 +1,5 @@
+{
+    // storage system will be initialized with this name
+    "storage": "zk", 
+    "end":""
+}
