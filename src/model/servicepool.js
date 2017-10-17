@@ -53,15 +53,17 @@ exports.init = function(options){
  * @param app {string} 应用名称
  * @param id {string} 微服务ID
  * @param url {string} 微服务访问URL
+ * @param version {string} 数据节点的版本号
  */
-ServicePool.prototype.add = function(app, id, url){
+ServicePool.prototype.add = function(app, id, url, version){
     // 先查询有没有，如果有，就更新
     var svc = this.get(app, id);
     if(svc && svc._id === id){
         svc.parse(url);
-        return this;
+        version && (svc._version = version);
+        return svc;
     }
-    svc = new service({app:app, id:id, url:url});
+    svc = new service({app:app, id:id, url:url, version:version});
     if(svc && svc._id === id){
         if(!_.has(this.services, app)){
             this.services[app] = {};
@@ -69,7 +71,7 @@ ServicePool.prototype.add = function(app, id, url){
         this.services[app][id] = svc;
     }
     logger.debug("After add %s: %s: %s", app, id, JSON.stringify(this.services));
-    return this;
+    return svc;
 }
 
 /**

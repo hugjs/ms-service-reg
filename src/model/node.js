@@ -215,7 +215,7 @@ Object.keys(TYPES).forEach(function (key) {
 });
 
 /**
- * 使得module对象支持时间的监听
+ * 使得module对象支持事件的监听
  */
 require('../model/events').EVENTS.forEach(function (key) {
     module.exports[key] = eventbus[key];

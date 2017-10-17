@@ -29,7 +29,7 @@ describe('zk/poolsync', function() {
       it('[P1] basic operations', function(done) {
         logger.debug('connected');
         client.mkdirp(
-            ROOT + '/base/service01',new Buffer('https://192.168.8.2:80/pth01'),
+            ROOT + '/base/service01',new Buffer('{"url":"https://192.168.8.2:80/pth01","enabled":1}'),
             zookeeper.CreateMode.PERSISTENT, function(err, p){
             logger.debug('mkdirp done')
             if(err) done(err);

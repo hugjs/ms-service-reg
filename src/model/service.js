@@ -6,7 +6,7 @@ var Util    = require('util');
 var _       = require('lodash');
 var URL     = require('url-parse');
 
-module.exports = Service;
+var eventbus = new Events.EventEmitter();
 Util.inherits(Service, Events.EventEmitter);
 /**
  * 微服务定义，需要扩展事件机制
@@ -27,6 +27,7 @@ function Service(options) {
     this._id = options.id;     // 微服务ID
     this._app = options.app;
     this._url = null;
+    this._version = options.version?options.version:-1;
     _.has(options,'url') && this.parse(options.url);
 }
 
@@ -54,7 +55,10 @@ Service.prototype.parse = function(url){
  * 停用服务
  */
 Service.prototype.disable = function(){
-    this._enable = false;
+    if(this._enable){
+        this._enable = false;
+        module.exports.emit('ServiceDisabled',this);
+    }
     return this;
 }
 
@@ -62,7 +66,10 @@ Service.prototype.disable = function(){
  * 启用服务
  */
 Service.prototype.enable = function(){
-    this._enable = true;
+    if(!this._enable){
+        this._enable = true;
+        module.exports.emit('ServiceEnabled',this);
+    }
     return this;
 }
 
@@ -73,6 +80,18 @@ Service.prototype.enabled = function(){
     return this._enable;
 }
 
+
+/**
+ * 封装为zookeeper服务节点数据
+ */
+Service.prototype.getServiceData = function(){
+    return JSON.stringify({
+        url: _.has(this._url,'href') ? this._url.href:"",
+        enabled: this._enable?1:0
+    });
+}
+
+
 /**
  * 获取服务节点URL信息
  */
@@ -80,4 +99,18 @@ Service.prototype.getUrl = function(){
     return this._url;
 }
 
+/**
+ * 获取服务节点版本信息
+ */
+Service.prototype.getVersion = function(){
+    return this._version;
+}
+
 module.exports = Service;
+
+/**
+ * 使得module对象支持事件的监听
+ */
+require('../model/events').EVENTS.forEach(function (key) {
+    module.exports[key] = eventbus[key];
+});

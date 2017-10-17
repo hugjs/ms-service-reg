@@ -9,11 +9,13 @@ var path = require('path');
 const logger = require('@log4js-node/log4js-api').getLogger(path.basename(module.id));
 var Events  = require('events');
 var Util    = require('util');
+var _ = require('lodash');
 var zookeeper = require('node-zookeeper-client');
 
 var svcpool = require('../model/servicepool');
+var Service = require('../model/service');
 
-const ROOT = '/MICRO/services'
+const ROOT = '/MICRO/services';
 
 var eventbus = new Events.EventEmitter();
 
@@ -43,6 +45,8 @@ function ZkPoolSync(options){
     self.zkclient = zookeeper.createClient(options.zk.url); // init zookeeper client
     self.zkclient.once('connected', function () {
         logger.info('Connected to ZooKeeper.');
+        // 开始监听事件
+        self.listen();
         // 初始化根目录
         self.zkclient.exists(self.root, 
             function(){},
@@ -90,6 +94,41 @@ exports.init = function(options, cb){
     cb && cb();
     return ZkPoolSync.singleton;
 }
+
+
+/**
+ * 监听服务状态的变化
+ */
+ZkPoolSync.prototype.listen = function(){
+    logger.debug('start listening...')
+    var self = this;
+    // 更新服务节点的数据
+    var updateNode = function(service){
+        self.zkclient.setData(
+            self.getServicePath(service._app, service._id), 
+            new Buffer(service.getServiceData()),
+            service.getVersion(),
+            function(error, stat){
+                if(error){
+                    logger.error("update Service Node data failed. %s", JSON.stringify(service));
+                    logger.error(error);
+                    return;
+                }
+            });
+    }
+    // 某一个节点被添加到了父节点中，需要在zk中创建
+    _.forEach(['ServiceDisabled','ServiceEnabled'],function(eventName){
+        Service.on(eventName,function(service){
+            logger.debug('%s: %s',eventName, JSON.stringify(service)) ;
+            if(!_.has(service, ['_url'])){
+                logger.error('Service data fail. %s event data should contains service info', eventName);
+                return;
+            }
+            updateNode(service);
+        });
+    });
+}
+
 
 /**
  * 开始同步
@@ -177,7 +216,7 @@ ZkPoolSync.prototype.syncservice = function(app, service,cb){
     cb = cb?cb:noop;
     logger.debug('ZkPoolSync sync syncservice: %s, %s' , app, service);
     var self = this;
-    var path = self.root + "/" + app + "/" + service;
+    var path = self.getServicePath(app, service);
     logger.debug(path);
     path && this.zkclient.getData(
         path,
@@ -195,7 +234,19 @@ ZkPoolSync.prototype.syncservice = function(app, service,cb){
                 return;
             }
             if(data){
-                self.pool.add(app, service, data, stat.version)
+                // 兼容data=url，或者data={url:'',enabled:''}的情况
+                var dataobj = {};
+                try{
+                    dataobj = JSON.parse(data.toString());
+                }catch(e){
+                    logger.error(e);
+                    dataobj.url = data;
+                }
+                logger.info("dataobj: %s", JSON.stringify(dataobj));
+                var svc = self.pool.add(app, service, dataobj.url, stat.version);
+                if(dataobj.enabled){
+                    svc.enable();
+                }
             }
             logger.debug(
                 'Service Node: %s has data: %s, version: %d',
@@ -206,6 +257,14 @@ ZkPoolSync.prototype.syncservice = function(app, service,cb){
             cb();
         }
     );
+}
+
+
+/**
+ * 获取服务的路径
+ */
+ZkPoolSync.prototype.getServicePath = function(app, service){
+    return this.root + "/" + app + "/" + service;
 }
 
 /**
