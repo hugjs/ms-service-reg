@@ -1,5 +1,6 @@
 
-const logger = require('@log4js-node/log4js-api').getLogger(module.id);
+var path = require('path');
+const logger = require('@log4js-node/log4js-api').getLogger(path.basename(module.id));
 var util = require('util');
 var expect = require('chai').expect
 var assert = require('chai').assert
