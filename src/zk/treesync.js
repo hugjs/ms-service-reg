@@ -168,6 +168,19 @@ ZkTreeSync.prototype.listen = function(){
                 }
         })
     });
+
+    
+    Node.on('TrySetDefault',function(data){
+        logger.debug('TrySetDefault: %s', JSON.stringify(data)) ;
+        if(_.intersection(_.keys(data),['app','current','newvalue']).length<3){
+            logger.error('Node data fail. TrySetDefault event data=%s should contains %s',
+            JSON.stringify(data), 
+            JSON.stringify(['app','current','newvalue']));
+            return;
+        }
+        // TODO 把值设置到zk中
+        
+    });
 }
 
 /**
@@ -236,6 +249,7 @@ ZkTreeSync.prototype.syncapp = function(app, cb){
             // 遍历节点
             var count = 0;
             versions.forEach(function(version) {
+                // TODO 如果是默认的_default _ongo的话，单独进行同步
                 self.syncversion(app, version, function(){
                     if(++count>=versions.length){
                         count = null;
@@ -249,7 +263,7 @@ ZkTreeSync.prototype.syncapp = function(app, cb){
 }
 
 /**
- * 把服务器中持久化下来的注册信息同步到本地节点中
+ * app->app_version下面的App版本的信息
  */
 ZkTreeSync.prototype.syncversion = function(app, version, cb){
     cb = cb?cb:noop;
@@ -289,18 +303,58 @@ ZkTreeSync.prototype.syncversion = function(app, version, cb){
 
 
 /**
- * 同步服务下面的服务节点内容
+ * app->app_version->service下面的服务版本的信息
  */
 ZkTreeSync.prototype.syncservice = function(app, version, service, cb){
     cb = cb?cb:noop;
-    logger.debug('ZkTreeSync sync syncservice: %s, %s, %s', app, version, service);
+    logger.debug('syncservice: %s, %s, %s', app, version, service);
     var self = this;
     var path = Util.format("%s/%s/%s/%s", self._root, app, version, service);
     path && this.zkclient.getChildren(
         path,
         function (event) {
-            logger.info('Got syncversion watcher event: %s', JSON.stringify(event));
+            logger.info('Got syncservice watcher event: %s', JSON.stringify(event));
             event.type === zookeeper.Event.NODE_DELETED || self.syncservice(app, version, service);
+        },
+        function (error, sversions, stat) {
+            if (error) {
+                logger.error(
+                    'Failed to list children of node: %s due to: %s.',
+                    path,
+                    error
+                );
+                return;
+            }
+            logger.debug('Children of node: %s are: %j.', path, sversions);
+            // 遍历节点
+            var count = 0;
+            sversions.forEach(function(service_version) {
+                self.syncserviceversion(app, version, service, service_version, function(){
+                    if(++count>=sversions.length){
+                        count = null;
+                        sversions = null;
+                        cb();
+                    }
+                });
+            }, this);
+        }
+    );
+}
+
+
+/**
+ * app->app_version->service->service_version下面的服务节点内容
+ */
+ZkTreeSync.prototype.syncserviceversion = function(app, version, service, service_version, cb){
+    cb = cb?cb:noop;
+    logger.debug('syncserviceversion: %s, %s, %s', app, version, service);
+    var self = this;
+    var path = Util.format("%s/%s/%s/%s", self._root, app, version, service);
+    path && this.zkclient.getChildren(
+        path,
+        function (event) {
+            logger.info('Got syncserviceversion watcher event: %s', JSON.stringify(event));
+            event.type === zookeeper.Event.NODE_DELETED || self.syncserviceversion(app, version, service);
         },
         function (error, sids, stat) {
             if (error) {
@@ -327,6 +381,52 @@ ZkTreeSync.prototype.syncservice = function(app, version, service, cb){
                     cb();
                 }
             }, this);
+        }
+    );
+}
+
+
+
+/**
+ * app->_default
+ * 同步app下特殊信息的信息，比如app的默认版本
+ */
+ZkTreeSync.prototype.syncAppDefault = function(app, prop, cb){
+    cb = cb?cb:noop;
+    logger.debug('syncAppDefault: %s, %s' , app, version);
+    var self = this;
+    var path = Util.format("%s/%s/%s", self._root, app, prop);
+    path && this.zkclient.getData(
+        path,
+        function (event) {
+            logger.info('Got syncAppDefault watcher event: %s', JSON.stringify(event));
+            // 节点删除的时候，需要同步删除节点信息
+            var appNode = self._tree.getApp(app);
+            if(event.type === zookeeper.Event.NODE_DELETED){
+                // 设置app节点下属性的值设置为undefined
+                appNode[prop] = undefined;
+            }else {
+                // 设置app节点下新的值
+                self.syncAppDefault(app, prop);
+            }
+        },
+        function (error, data, stat) {
+            if (error) {
+                cb();
+                logger.error('Error occurred when getting data: %s.', error);
+                return;
+            }
+            if(data){
+                var appNode = self._tree.getApp(app);
+                appNode[prop] = {value: data, version: stat.version};
+            }
+            logger.debug(
+                'Service Node: %s has data: %s, version: %d',
+                path,
+                data ? data.toString() : undefined,
+                stat.version
+            );
+            cb();
         }
     );
 }

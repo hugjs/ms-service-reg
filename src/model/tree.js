@@ -55,6 +55,36 @@ exports.init = function(options){
 
 /**
  * 
+ * 获取某个版本的某微服务的注册节点，所有这个版本的微服务都是注册在这个下面的
+ * 
+ * @param options {object} 服务注册信息
+ * 
+ * options.app_version 注册的app的版本
+ * 
+ * options.app app名称
+ * 
+ * options.service 微服务的名称
+ * 
+ * options.service_version 微服务的版本号
+ *
+ * 
+ */
+ServiceTree.prototype.getSVNode = function(options){
+    var appNode = this.getApp(options.app);
+    if(!appNode) return false;
+    if(!options.app_version) options.app_version = appNode.default();
+    var vNode = appNode.child(options.app_version);
+    if(!vNode) return false;
+    var sNode = vNode.child(options.service);
+    if(!sNode) return false;
+    var svNode = vNode.child(options.service_version);
+    if(!svNode) return false;
+    return svNode;
+
+}
+
+/**
+ * 
  * 注册一个微服务
  * 
  * @param options {object} 服务注册信息
@@ -118,6 +148,31 @@ ServiceTree.prototype.regist = function(options){
 }
 
 /**
+ * 
+ * 取消一个微服务的注册
+ * 
+ * @param options {object} 服务注册信息
+ * 
+ * options.app_version 注册的app的版本
+ * 
+ * options.app app名称
+ * 
+ * options.service 微服务的名称
+ * 
+ * options.service_version 微服务的版本号
+ * 
+ * options.sid 微服务的节点ID
+ * 
+ */
+ServiceTree.prototype.unregist = function(options){
+    var svNode = this.getSVNode(options);
+    if(!svNode) return false;
+    svNode.remove(options.sid);
+    return true;
+}
+
+
+/**
  * 获得某个app的节点
  */
 ServiceTree.prototype.getApp = function(app){
@@ -130,3 +185,7 @@ ServiceTree.prototype.getApp = function(app){
 exports.regist = function(options){
     return exports.init().regist(options);
 }
+
+/**
+ * 
+ */
