@@ -137,7 +137,6 @@ ZkPoolSync.prototype.syncroot = function(path, cb){
     cb = cb?cb:noop;
     logger.debug('ZkPoolSync sync root: %s' , path);
     var self = this;
-    logger.debug(path);
     path && this.zkclient.getChildren(
         path,
         function (event) {
@@ -156,6 +155,10 @@ ZkPoolSync.prototype.syncroot = function(path, cb){
             logger.debug('Children of node: %s are: %j.', path, apps);
             // TODO 遍历节点
             var count = 0;
+            if(!apps || apps.length == 0){
+                cb();
+                return;
+            }
             apps.forEach(function(app) {
                 self.syncapp(app, function(){
                     if(++count>=apps.length){
@@ -196,6 +199,10 @@ ZkPoolSync.prototype.syncapp = function(app, cb){
             logger.debug('Children of node: %s are: %j.', path, services);
             // 遍历节点并创建服务节点
             var count = 0;
+            if(!services || services.length == 0){
+                cb();
+                return;
+            }
             services.forEach(function(service){
                 self.syncservice(app, service, function(){
                     if(++count>=services.length){

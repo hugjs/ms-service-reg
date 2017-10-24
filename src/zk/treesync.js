@@ -20,6 +20,8 @@ var Node = require('../model/node')
 
 const ROOT = '/MICRO/apps'
 
+const RETRY_TIME = 3
+
 var eventbus = new Events.EventEmitter();
 
 /**
@@ -114,7 +116,7 @@ ZkTreeSync.prototype.listen = function(){
                 }
                 if (stat) {
                     // 如果节点已经存在，默认不做操作
-                    logger.debug(JSON.stringify(stat));
+                    logger.debug("%s exists, no change.", data.child._path);
                 } else {
                     var version = "";
                     // 特定情况下，需要写入节点数据，默认为空
@@ -168,7 +170,6 @@ ZkTreeSync.prototype.listen = function(){
                 }
         })
     });
-
     
     Node.on('TrySetDefault',function(data){
         logger.debug('TrySetDefault: %s', JSON.stringify(data)) ;
@@ -178,8 +179,48 @@ ZkTreeSync.prototype.listen = function(){
             JSON.stringify(['app','current','newvalue']));
             return;
         }
-        // TODO 把值设置到zk中
-        
+        // data.times用户控制重试次数，默认重试3次
+        data.times = data.times?data.times:1;
+        // 把值设置到zk中
+        var path = Util.format("%s/%s/_default", self._root, data.app._id);
+        // stat参数需要根据类型分别处理，create的时候是path，setData的时候是Stat
+        var proc = function(error, stat){
+            if (error) {
+                logger.error(
+                    'Failed to TrySetDefault: %s to %s due to: %s.',
+                    path, data.newvalue,
+                    JSON.stringify(error)
+                );
+                // retry if needed
+                if(data.times<RETRY_TIME){
+                    ++data.times;
+                    Node.emit('TrySetDefault', data);
+                }else{
+                    logger.error(
+                        'Retry all Failed to TrySetDefault: %s to %s',
+                        path, data.newvalue
+                    );
+                }
+                return;
+            }
+            logger.info(
+                'TrySetDefault Success: %s to %s.',
+                path, data.newvalue
+            );
+        };
+        self.zkclient.exists(path, function(err, stat){
+            if(stat){
+                self.zkclient.setData(path,
+                    new Buffer(data.newvalue), 
+                    _.has(data, ['current.version'])?data.current.version:-1,
+                    proc
+                );
+            }else{
+                self.zkclient.create(path, 
+                    new Buffer(data.newvalue), 
+                    proc)
+            }
+        })
     });
 }
 
@@ -190,7 +231,6 @@ ZkTreeSync.prototype.sync = function(path, cb){
     cb = cb?cb:noop;
     logger.debug('ZkTreeSync sync root: %s' , path);
     var self = this;
-    logger.debug(path);
     path && this.zkclient.getChildren(
         path,
         function (event) {
@@ -209,6 +249,10 @@ ZkTreeSync.prototype.sync = function(path, cb){
             logger.debug('Children of node: %s are: %j.', path, apps);
             // 遍历节点
             var count = 0;
+            if(!apps || apps.length == 0){
+                cb();
+                return;
+            }
             apps.forEach(function(app) {
                 self.syncapp(app, function(){
                     if(++count>=apps.length){
@@ -248,6 +292,10 @@ ZkTreeSync.prototype.syncapp = function(app, cb){
             logger.debug('Children of node: %s are: %j.', path, versions);
             // 遍历节点
             var count = 0;
+            if(!versions || versions.length == 0){
+                cb();
+                return;
+            }
             versions.forEach(function(version) {
                 // TODO 如果是默认的_default _ongo的话，单独进行同步
                 self.syncversion(app, version, function(){
@@ -288,6 +336,10 @@ ZkTreeSync.prototype.syncversion = function(app, version, cb){
             logger.debug('Children of node: %s are: %j.', path, services);
             // 遍历节点
             var count = 0;
+            if(!services || services.length == 0){
+                cb();
+                return;
+            }
             services.forEach(function(service) {
                 self.syncservice(app, version, service, function(){
                     if(++count>=services.length){
@@ -328,6 +380,10 @@ ZkTreeSync.prototype.syncservice = function(app, version, service, cb){
             logger.debug('Children of node: %s are: %j.', path, sversions);
             // 遍历节点
             var count = 0;
+            if(!sversions || sversions.length == 0){
+                cb();
+                return;
+            }
             sversions.forEach(function(service_version) {
                 self.syncserviceversion(app, version, service, service_version, function(){
                     if(++count>=sversions.length){
@@ -368,6 +424,10 @@ ZkTreeSync.prototype.syncserviceversion = function(app, version, service, servic
             logger.debug('Children of node: %s are: %j.', path, sids);
             // 遍历节点
             var count = 0;
+            if(!sids || sids.length == 0){
+                cb();
+                return;
+            }
             sids.forEach(function(node) {
                 self._tree.regist({
                     app:app,

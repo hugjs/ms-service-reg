@@ -34,9 +34,11 @@ var eventbus = new Events.EventEmitter();
  */
 function ZooKeeper(options){
     treesync.once('ready', function(){
+        logger.debug("treesync ready");
         module.exports.emit('ready');
     });
     poolsync.once('ready',function(){
+        logger.debug("poolsync ready");
         treesync.init({
             zk:{
                 url:options.zk.url

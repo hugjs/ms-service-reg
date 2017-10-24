@@ -98,8 +98,6 @@ function Node(options) {
       case TYPES.APP_VERSION:
       case TYPES.APP:
         this._app = options.app;
-        this._default = null;   // {value:'0.1.0', version:2}
-        this._ongo = null;      // {value:'0.1.0', version:2}
         break;
       case TYPES.DIR:
         this._path = options.path? options.path: DELIMITER;
@@ -176,7 +174,7 @@ Node.prototype.default = function(){
  * 设置默认版本
  */
 Node.prototype.setDefault = function(value){
-  if(_.has(this,['_default'])) {
+  if(this._type == TYPES.APP) {
     module.exports.emit('TrySetDefault', {app: this, current: this._default, newvalue: value});
   }
 }

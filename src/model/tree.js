@@ -111,7 +111,7 @@ ServiceTree.prototype.regist = function(options){
     var appNode = this.getApp(options.app);
     if(!appNode || appNode._type != Node.APP){
         // 先创建app节点
-        appNode = new Node({id:options.app, })
+        appNode = new Node({id:options.app, type: Node.APP})
         this._apps.add(appNode);
     }
     if(!options.app_version) options.app_version = appNode.default();
