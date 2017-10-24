@@ -196,6 +196,8 @@ ZkTreeSync.prototype.listen = function(){
                     ++data.times;
                     Node.emit('TrySetDefault', data);
                 }else{
+                    data.status = 1;
+                    Node.emit('DefaultSetDone', data);
                     logger.error(
                         'Retry all Failed to TrySetDefault: %s to %s',
                         path, data.newvalue
@@ -203,6 +205,8 @@ ZkTreeSync.prototype.listen = function(){
                 }
                 return;
             }
+            data.status = 0;
+            Node.emit('DefaultSetDone', data);
             logger.info(
                 'TrySetDefault Success: %s to %s.',
                 path, data.newvalue

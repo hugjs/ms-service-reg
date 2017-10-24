@@ -6,7 +6,7 @@
  * 
  * @module
  */
-
+var noop = function(){}
 var path = require('path');
 const logger = require('@log4js-node/log4js-api').getLogger(path.basename(module.id));
 var Events  = require('events');
@@ -173,10 +173,24 @@ Node.prototype.default = function(){
 /**
  * 设置默认版本
  */
-Node.prototype.setDefault = function(value){
-  if(this._type == TYPES.APP) {
-    module.exports.emit('TrySetDefault', {app: this, current: this._default, newvalue: value});
+Node.prototype.setDefault = function(value, cb){
+  cb = cb?cb:noop;
+  var self = this;
+  if(self._type == TYPES.APP) {
+    module.exports.emit('TrySetDefault', {app: self, current: self._default, newvalue: value});
   }
+  var proc = function(data){
+    if (data.app._id == self._id && data.newvalue == value){
+      // TODO 处理并把当前的监听函数从监听列表里面去掉
+      cb({status:data.status === 0});
+    }
+  };
+  module.exports.on('DefaultSetDone',proc);
+
+  // 如果3s之后还没有设置结束，默认失败，并去掉监听函数
+  setTimeout(function(){
+    // TODO
+  },3000);
 }
 
 /**
