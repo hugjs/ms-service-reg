@@ -29,7 +29,7 @@ describe('zk/treesync',function(){
             pool.add('base','service02','http://192.168.1.3:8081/svc02',"0.1.2");
             done();
         });
-        it('[P1] basic operations',function(){
+        it('[P1] basic operations',function(done){
                 assert(tree.regist({
                     app:'base',
                     app_version: '0.1.1',
@@ -44,13 +44,19 @@ describe('zk/treesync',function(){
                     service_version: '0.1.3',
                     sid: 'service03',
                 })==false, 'Appending none existing service');
-                tree.getApp('base').setDefault("0.1.1");
-                logger.debug("base app data: " + JSON.stringify(tree.getApp('base')));
-                setTimeout(function(){
-                    assert(
-                        tree.getApp('base').default()=="0.1.1",
-                        "Setting application's default version");
-                },3000)
+                tree.getApp('base').setDefault("0.1.1",function(rst){
+                    logger.debug(JSON.stringify(rst));
+                    assert(rst.status === 0, "Setting application's default version rst.status==0");
+                    
+                    setTimeout(function(){
+                        logger.debug('app after set: %s', 
+                            JSON.stringify(tree.getApp('base')))
+                        assert(
+                            tree.getApp('base').default()=="0.1.1",
+                            "Setting application's default version");
+                        done();
+                    },3000)
+                });
                 
         });
         after(function(){

@@ -13,6 +13,7 @@ var Events  = require('events');
 var Util    = require('util');
 var _       = require('lodash');
 var URL     = require('url-parse');
+var cuid = require('cuid');
 
 const DELIMITER = "/"
 const PATH_DEFAULT = "v_default"
@@ -171,26 +172,35 @@ Node.prototype.default = function(){
 }
 
 /**
- * 设置默认版本
+ * 设置默认版本，异步操作。操作默认3s超时
+ * 
+ * @param {String} value 新的默认版本信息
+ * @param {Function} cb({status:0, msg:''}) 回调函数，status=0表示成功
+ * 
  */
 Node.prototype.setDefault = function(value, cb){
   cb = cb?cb:noop;
   var self = this;
+  var opsid = cuid(); // 唯一操作号
   if(self._type == TYPES.APP) {
-    module.exports.emit('TrySetDefault', {app: self, current: self._default, newvalue: value});
+    module.exports.emit('TrySetDefault', {app: self, current: self._default, newvalue: value, opsid: opsid});
   }
   var proc = function(data){
-    if (data.app._id == self._id && data.newvalue == value){
-      // TODO 处理并把当前的监听函数从监听列表里面去掉
-      cb({status:data.status === 0});
+    logger.info('DefaultSetDone proc: %s', JSON.stringify(data));
+    if (data.app._id == self._id && data.opsid == opsid){
+      //  处理并把当前的监听函数从监听列表里面去掉
+      module.exports.removeListener('DefaultSetDone', proc);
+      cb({status:data.status});
     }
   };
   module.exports.on('DefaultSetDone',proc);
 
-  // 如果3s之后还没有设置结束，默认失败，并去掉监听函数
+  // 如果10s之后还没有设置结束，默认失败，并去掉监听函数
   setTimeout(function(){
-    // TODO
-  },3000);
+    // 处理并把当前的监听函数从监听列表里面去掉
+    module.exports.removeListener('DefaultSetDone', proc);
+    cb({status:1,msg:'timeout'});
+  },10000);
 }
 
 /**

@@ -27,6 +27,10 @@ bignumber.js@3.1.2:
   version "3.1.2"
   resolved "http://192.168.8.3:4873/bignumber.js/-/bignumber.js-3.1.2.tgz#f3bdb99ad5268a15fc1f0bed2fb018e2693fe236"
 
+browser-fingerprint@0.0.1:
+  version "0.0.1"
+  resolved "http://registry.npm.taobao.org/browser-fingerprint/download/browser-fingerprint-0.0.1.tgz#8df3cdca25bf7d5b3542d61545d730053fce604a"
+
 chai@^4.1.1:
   version "4.1.1"
   resolved "http://192.168.8.3:4873/chai/-/chai-4.1.1.tgz#66e21279e6f3c6415ff8231878227900e2171b39"
@@ -49,9 +53,21 @@ config@^1.26.2:
     json5 "0.4.0"
     os-homedir "1.0.2"
 
+core-js@^1.1.1:
+  version "1.2.7"
+  resolved "http://registry.npm.taobao.org/core-js/download/core-js-1.2.7.tgz#652294c14651db28fa93bd2d5ff2983a4f08c636"
+
 core-util-is@~1.0.0:
   version "1.0.2"
   resolved "http://192.168.8.3:4873/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
+
+cuid@^1.3.8:
+  version "1.3.8"
+  resolved "http://registry.npm.taobao.org/cuid/download/cuid-1.3.8.tgz#4b875e0969bad764f7ec0706cf44f5fb0831f6b7"
+  dependencies:
+    browser-fingerprint "0.0.1"
+    core-js "^1.1.1"
+    node-fingerprint "0.0.2"
 
 date-format@^0.0.0:
   version "0.0.0"
@@ -126,6 +142,10 @@ mysql@~2.13.0:
     bignumber.js "3.1.2"
     readable-stream "1.1.14"
     sqlstring "2.2.0"
+
+node-fingerprint@0.0.2:
+  version "0.0.2"
+  resolved "http://registry.npm.taobao.org/node-fingerprint/download/node-fingerprint-0.0.2.tgz#31cbabeb71a67ae7dd5a7dc042e51c3c75868501"
 
 node-zookeeper-client@^0.2.2:
   version "0.2.2"

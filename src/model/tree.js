@@ -111,8 +111,7 @@ ServiceTree.prototype.regist = function(options){
     var appNode = this.getApp(options.app);
     if(!appNode || appNode._type != Node.APP){
         // 先创建app节点
-        appNode = new Node({id:options.app, type: Node.APP})
-        this._apps.add(appNode);
+        appNode = this.addApp(options.app);
     }
     if(!options.app_version) options.app_version = appNode.default();
 
@@ -178,6 +177,17 @@ ServiceTree.prototype.unregist = function(options){
 ServiceTree.prototype.getApp = function(app){
     return this._apps.child(app);
 }
+
+
+/**
+ * 添加某个app的节点
+ */
+ServiceTree.prototype.addApp = function(app){
+    var appNode = new Node({id:app, type: Node.APP});
+    this._apps.add(appNode);
+    return appNode;
+}
+
 
 /**
  * 提供模块直接访问的入口

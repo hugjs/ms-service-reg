@@ -277,7 +277,9 @@ ZkTreeSync.prototype.syncapp = function(app, cb){
     cb = cb?cb:noop;
     logger.debug('ZkTreeSync sync syncapp: %s' , app);
     var self = this;
+    self._tree.getApp(app) || self._tree.addApp(app);
     var path = Util.format("%s/%s", self._root, app);
+
     path && this.zkclient.getChildren(
         path,
         function (event) {
@@ -301,7 +303,17 @@ ZkTreeSync.prototype.syncapp = function(app, cb){
                 return;
             }
             versions.forEach(function(version) {
-                // TODO 如果是默认的_default _ongo的话，单独进行同步
+                // 如果是默认的_default _ongo的话，单独进行同步
+                if( ['_default'].indexOf(version) >= 0){
+                    self.syncAppDefault(app, version,function(){
+                        if(++count>=versions.length){
+                            count = null;
+                            versions = null;
+                            cb();
+                        }
+                    })
+                    return;
+                }
                 self.syncversion(app, version, function(){
                     if(++count>=versions.length){
                         count = null;
@@ -457,7 +469,7 @@ ZkTreeSync.prototype.syncserviceversion = function(app, version, service, servic
  */
 ZkTreeSync.prototype.syncAppDefault = function(app, prop, cb){
     cb = cb?cb:noop;
-    logger.debug('syncAppDefault: %s, %s' , app, version);
+    logger.debug('syncAppDefault: %s, %s' , app, prop);
     var self = this;
     var path = Util.format("%s/%s/%s", self._root, app, prop);
     path && this.zkclient.getData(
@@ -480,16 +492,16 @@ ZkTreeSync.prototype.syncAppDefault = function(app, prop, cb){
                 logger.error('Error occurred when getting data: %s.', error);
                 return;
             }
-            if(data){
-                var appNode = self._tree.getApp(app);
-                appNode[prop] = {value: data, version: stat.version};
-            }
             logger.debug(
                 'Service Node: %s has data: %s, version: %d',
                 path,
                 data ? data.toString() : undefined,
                 stat.version
             );
+            if(data){
+                var appNode = self._tree.getApp(app);
+                appNode[prop] = {value: data.toString(), version: stat.version};
+            }
             cb();
         }
     );
