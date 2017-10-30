@@ -8,6 +8,7 @@
  * @module 
  * 
  */
+var noop = function(){}
 var path = require('path');
 const logger = require('@log4js-node/log4js-api').getLogger(path.basename(module.id));
 var Events  = require('events');
@@ -98,11 +99,17 @@ ServiceTree.prototype.getSVNode = function(options){
  * options.sid 微服务的节点ID
  * 
  */
-ServiceTree.prototype.regist = function(options){
+ServiceTree.prototype.regist = function(options, cb){
+    cb = cb?cb:noop;
+    var keys = ['app','app_version','service','sid'];
+    if(_.intersection(_.keys(options), keys).length<keys.length){
+        cb({status:1, msg:"参数缺失"});
+        return false;
+    }
     var service = pool.get(options.app, options.sid);
     if(!service) {
         logger.error('Service Tree regist failed. SID not found in pool: %s', JSON.stringify(options));
-        // TODO 清理注册树（注册树和服务池没有同步，导致的数据差异）
+        // 清理注册树（注册树和服务池没有同步，导致的数据差异）
         Node.emit('ZombieTreeNode', options);
         return false;
     }

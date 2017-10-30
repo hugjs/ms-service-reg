@@ -18,6 +18,7 @@ const logger = require('@log4js-node/log4js-api').getLogger(path.relative(proces
 var coparser = require('co-body');
 var _ = require('lodash');
 var svcPool = require('../model/servicepool').init()
+var svcTree = require('../model/tree').init()
 var svcCache = require('../model/servicecache')
 
 
@@ -89,8 +90,40 @@ exports.activate = async function(ctx, next){
  * 
  * @param {Object} options {a:"",av:"",s:"", sid:"", sv:""}
  */
-function deactivate(options){
-    
+exports.deactivate = async function(ctx, next){
+    // 格式化请求报文数据
+    var body = {}
+    try{
+        body = await coparser.json(ctx)
+    }catch(e){
+        logger.error(e);
+        return await next();
+    }
+    // 数据校验
+    if(!body || !body.a || (!body.s && !body.sid) || (!body.sv && !body.sid)){
+        ctx.body = {status:1, msg:"参数缺失"};
+        return await next();
+    }
+    if(body.a && body.sid){
+        // 根据sid启动服务
+        var svc = svcPool.get(body.a, body.sid);
+        if(svc){
+            svc.disable();
+            ctx.body = {status:0}
+        }else{
+            ctx.body = {status:1,msg:"service not found"}
+        }
+        return await next();
+    }else if(body.a && body.s && body.sv){
+        var services = svcCache.getServiceWithVersion(body.a, body.s, body.sv);
+        _.forEach(services, function(service){
+            service.disable();
+        })
+        ctx.body = {status:0}
+        return await next();
+    }
+    ctx.body = {status:2, msg:"系统异常，参数错误"};
+    return await next();
 }
 
 
@@ -107,8 +140,34 @@ function deactivate(options){
  * 
  * @param {Object} options {a:"",av:"",s:"", sid:"", sv:""}
  */
-function regist(options){
-    
+exports.regist = async function(ctx, next){
+    // 格式化请求报文数据
+    var body = {}
+    try{
+        body = await coparser.json(ctx)
+    }catch(e){
+        logger.error(e);
+        return await next();
+    }
+    // 数据校验
+    var keys = ['a','av','s','sid','sv'];
+    if(_.intersection(_.keys(body), keys).length<keys.length){
+        ctx.body = {status:1, msg:"参数缺失"};
+        return await next();
+    }
+    svcTree.regist({
+        app: body.a,
+        app_version: body.av,
+        service: body.s,
+        sid: body.sid
+    },function(rst){
+        if(rst.status == 0){
+            ctx.body = {status:0}
+        }else{
+            ctx.body = {status:1, msg:"操作失败"}
+        }
+        return await next();
+    })
 }
 
 
