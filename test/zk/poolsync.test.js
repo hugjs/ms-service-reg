@@ -41,21 +41,22 @@ describe('zk/poolsync', function() {
                 assert(svc != null, util.format('service %s:%s not found', 'base','service01'));
                 expect(svc.getUrl(),"verify service info just added").to.nested.include({'hostname':'192.168.8.2','port':'80','protocol':'https'});
                 svc = null;
-                client.remove(p,function(err0){
-                    assert(err0 == null, 'zookeeper remove got error: ' + util.format('%s',err0));
-                    setTimeout(function(){
-                        var svc = pool.get('base','service01');
-                        assert(svc == null, 'verify the service is removed when node deleted');
-                        done();
-                    },100);
-                });
-            },100);
+                done();
+            },200);
         })
       })
     });
-    after(function(){
-        client.remove(ROOT + '/base',function(){
-            client.close();
-        })
+    after(function(done){
+        client.remove(ROOT + '/base/service01',function(err0){
+            assert(err0 == null, 'zookeeper remove got error: ' + util.format('%s',err0));
+            client.remove(ROOT + '/base',function(){
+                client.close();
+                done();
+            })
+            setTimeout(function(){
+                var svc = pool.get('base','service01');
+                assert(svc == null, 'verify the service is removed when node deleted');
+            },100);
+        });
     });
 });

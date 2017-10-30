@@ -5,6 +5,8 @@ var Events  = require('events');
 var Util    = require('util');
 var _       = require('lodash');
 var URL     = require('url-parse');
+var cache   = require('./servicecache')
+var cuid = require('cuid');
 
 var eventbus = new Events.EventEmitter();
 Util.inherits(Service, Events.EventEmitter);
@@ -54,10 +56,11 @@ Service.prototype.parse = function(url){
 /**
  * 停用服务
  */
-Service.prototype.disable = function(){
+Service.prototype.disable = function(traceid){
+    traceid = traceid?traceid:cuid();
     if(this._enable){
         this._enable = false;
-        module.exports.emit('ServiceDisabled',this);
+        module.exports.emit('ServiceDisabled',{service:this,traceid:traceid});
     }
     return this;
 }
@@ -65,10 +68,11 @@ Service.prototype.disable = function(){
 /**
  * 启用服务
  */
-Service.prototype.enable = function(){
+Service.prototype.enable = function(traceid){
+    traceid = traceid?traceid:cuid();
     if(!this._enable){
         this._enable = true;
-        module.exports.emit('ServiceEnabled',this);
+        module.exports.emit('ServiceEnabled',{service:this,traceid:traceid});
     }
     return this;
 }

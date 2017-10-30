@@ -11,7 +11,15 @@
  * [ ] 设置ongo版本
  * 
  */
-var version = require("@lqb/lib").version
+var noop = function(){}
+var path = require('path');
+const logger = require('@log4js-node/log4js-api').getLogger(path.relative(process.cwd(),module.id));
+
+var version = require("@lqb/lib").version;
+var coparser = require('co-body');
+var _ = require('lodash');
+var svcPool = require('../model/servicepool').init()
+var svcCache = require('../model/servicecache')
 
 
 /**
@@ -28,10 +36,38 @@ var version = require("@lqb/lib").version
  * 如果sid提供，则直接更新sid对应的服务节点的状态；
  * 如果s和sv提供，则更新某个服务下某版本的服务的所有节点的状态；
  * 
- * @param {Object} options {a:"",av:"",:"", sid:"", sv:""}
+ * @param {Object} ctx.request {a:"",av:"",s:"", sid:"", sv:""}
  */
-function activate(options){
-
+exports.activate = async function(ctx, next){
+    // 格式化请求报文数据
+    var body = {}
+    try{
+        body = await coparser.json(ctx)
+    }catch(e){
+        logger.error(e);
+        return await next();
+    }
+    // 数据校验
+    if(!body || !body.a || (!body.s && !body.sid) || (!body.sv && !body.sid)){
+        ctx.body = {status:1, msg:"参数缺失"};
+        return await next();
+    }
+    if(body.a && body.sid){
+        // 根据sid启动服务
+        var svc = svcPool.get(body.a, body.sid);
+        svc.enable();
+        ctx.body = {status:0}
+        return await next();
+    }else if(body.a && body.s && body.sv){
+        var services = svcCache.getServiceWithVersion(body.a, body.s, body.sv);
+        _.forEach(services, function(service){
+            service.enable();
+        })
+        ctx.body = {status:0}
+        return await next();
+    }
+    ctx.body = {status:2, msg:"系统异常，参数错误"};
+    return await next();
 }
 
 /**

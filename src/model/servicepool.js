@@ -82,8 +82,8 @@ ServicePool.prototype.add = function(app, id, url, version){
 ServicePool.prototype.remove = function(app, id){
     var svc = this.get(app, id);
     if(svc && svc._id === id){
-        svc.disable(); // 防止有其他引用
-        delete this.services[app][id];
+        svc._enable = false; // 防止有其他引用, 不再调用disable()防止同步被触发
+        this.services[app][id] = undefined;
     }
     logger.debug("After delete %s: %s: %s", app, id, JSON.stringify(this.services));
     return this;

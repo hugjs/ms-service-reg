@@ -103,28 +103,29 @@ ZkPoolSync.prototype.listen = function(){
     logger.debug('start listening...')
     var self = this;
     // 更新服务节点的数据
-    var updateNode = function(service){
+    var updateNode = function(service, traceid){
         self.zkclient.setData(
             self.getServicePath(service._app, service._id), 
             new Buffer(service.getServiceData()),
             service.getVersion(),
             function(error, stat){
                 if(error){
-                    logger.error("update Service Node data failed. %s", JSON.stringify(service));
-                    logger.error(error);
+                    logger.error("%s, update Service Node data failed. %s", traceid, JSON.stringify(service));
+                    logger.error(traceid, error);
                     return;
                 }
             });
     }
     // 某一个节点被添加到了父节点中，需要在zk中创建
     _.forEach(['ServiceDisabled','ServiceEnabled'],function(eventName){
-        Service.on(eventName,function(service){
-            logger.debug('%s: %s',eventName, JSON.stringify(service)) ;
-            if(!_.has(service, ['_url'])){
-                logger.error('Service data fail. %s event data should contains service info', eventName);
+        Service.on(eventName,function(data){
+            logger.debug('%s: %s',eventName, JSON.stringify(data)) ;
+            if(!_.has(data, ["service",'_url'])){
+                logger.error('%s, Service data fail. %s event data should contains service info', 
+                data.traceid, eventName);
                 return;
             }
-            updateNode(service);
+            updateNode(data.service, data.traceid);
         });
     });
 }

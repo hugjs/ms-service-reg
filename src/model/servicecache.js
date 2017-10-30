@@ -82,7 +82,7 @@ Node.on('ChildRemoved',function(data){
 /**
  * 获得某个微服务的所有节点
  */
-exports.getServiceNodes = function(app, app_version, service){
+exports.getService = function(app, app_version, service){
     var key_md5 = crypto.createHash('md5').update(_.join([app, app_version, service], DELIMITER)).digest('hex');
     if(_.has(route_cache, key_md5)) return route_cache[key_md5];
     else return null;
@@ -91,7 +91,7 @@ exports.getServiceNodes = function(app, app_version, service){
 /**
  * 获得某个版本的微服务的所有节点，可以跨不同app的版本
  */
-exports.getServiceNodes = function(app, service, service_version){
+exports.getServiceWithVersion = function(app, service, service_version){
     var key_md5 = crypto.createHash('md5').update(_.join([app, service, service_version], DELIMITER)).digest('hex');
     if(_.has(route_cache, key_md5)) return route_cache[key_md5];
     else return null;
