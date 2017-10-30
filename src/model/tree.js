@@ -95,18 +95,18 @@ ServiceTree.prototype.getSVNode = function(options){
  * 
  * options.service 微服务的名称
  * 
- * options.service_version 微服务的版本号
- * 
  * options.sid 微服务的节点ID
  * 
  */
 ServiceTree.prototype.regist = function(options){
     var service = pool.get(options.app, options.sid);
     if(!service) {
-        logger.debug('tree: %s', JSON.stringify(this._apps));
-        logger.error('Service Tree regist failed. SID not found in pool: %s', options.sid);
+        logger.error('Service Tree regist failed. SID not found in pool: %s', JSON.stringify(options));
+        // TODO 清理注册树（注册树和服务池没有同步，导致的数据差异）
+        Node.emit('ZombieTreeNode', options);
         return false;
     }
+
     // 初始化应用版本如果没有提供的话，直接用当前的默认版本
     var appNode = this.getApp(options.app);
     if(!appNode || appNode._type != Node.APP){
@@ -124,8 +124,6 @@ ServiceTree.prototype.regist = function(options){
         appNode.add(vNode);
     }
 
-
-    // 判断微服务版本号与当前的服务版本号是否一致，如果不一致，直接失败
     var sNode = vNode.child(options.service);
     if(!sNode){
         sNode = new Node({

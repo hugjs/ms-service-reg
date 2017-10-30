@@ -61,6 +61,7 @@ Util.inherits(ZooKeeper, Events.EventEmitter);
  * 初始化服务列表对象，如果已经存在就直接返回
  */
 exports.init = function(options){
+    logger.info('initializing zookeeper: %s', JSON.stringify(options));
     if( !ZooKeeper.singleton ) {
         ZooKeeper.singleton = new ZooKeeper(options);
     }

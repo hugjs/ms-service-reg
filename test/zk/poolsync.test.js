@@ -1,4 +1,5 @@
 
+require("../../log")
 var path = require('path');
 const logger = require('@log4js-node/log4js-api').getLogger(path.basename(module.id));
 var util = require('util');
@@ -30,7 +31,7 @@ describe('zk/poolsync', function() {
       it('[P1] basic operations', function(done) {
         logger.debug('connected');
         client.mkdirp(
-            ROOT + '/base/service01',new Buffer('{"url":"https://192.168.8.2:80/pth01","enabled":1}'),
+            ROOT + '/base/service01',new Buffer('{"url":"https://192.168.8.2:80/pth01","enabled":1, "version":"0.1.1"}'),
             zookeeper.CreateMode.PERSISTENT, function(err, p){
             logger.debug('mkdirp done')
             if(err) done(err);
@@ -42,7 +43,7 @@ describe('zk/poolsync', function() {
                 expect(svc.getUrl(),"verify service info just added").to.nested.include({'hostname':'192.168.8.2','port':'80','protocol':'https'});
                 svc = null;
                 done();
-            },200);
+            },300);
         })
       })
     });

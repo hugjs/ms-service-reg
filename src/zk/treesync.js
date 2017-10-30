@@ -226,6 +226,25 @@ ZkTreeSync.prototype.listen = function(){
             }
         })
     });
+
+    Node.on('ZombieTreeNode',function(data){
+        var path = Util.format("%s/%s/%s/%s/%s", 
+            self._root, data.app, data.app_version, data.service, data.sid);
+        self.zkclient.remove(path, -1,
+            function(){
+            },
+            function(err, stat){
+                if(err){
+                    logger.error(
+                        'Remove zombie node failed: %s due to: %s.',
+                        path,
+                        err
+                    );
+                    return;
+                }
+                
+        })
+    });
 }
 
 /**
@@ -371,7 +390,7 @@ ZkTreeSync.prototype.syncversion = function(app, version, cb){
 
 
 /**
- * app->app_version->service下面的服务版本的信息
+ * app->app_version->service下面的服务SID的信息
  */
 ZkTreeSync.prototype.syncservice = function(app, version, service, cb){
     cb = cb?cb:noop;
@@ -384,7 +403,7 @@ ZkTreeSync.prototype.syncservice = function(app, version, service, cb){
             logger.info('Got syncservice watcher event: %s', JSON.stringify(event));
             event.type === zookeeper.Event.NODE_DELETED || self.syncservice(app, version, service);
         },
-        function (error, sversions, stat) {
+        function (error, sids, stat) {
             if (error) {
                 logger.error(
                     'Failed to list children of node: %s due to: %s.',
@@ -393,21 +412,25 @@ ZkTreeSync.prototype.syncservice = function(app, version, service, cb){
                 );
                 return;
             }
-            logger.debug('Children of node: %s are: %j.', path, sversions);
+            logger.debug('Children of node: %s are: %j.', path, sids);
             // 遍历节点
             var count = 0;
-            if(!sversions || sversions.length == 0){
+            if(!sids || sids.length == 0){
                 cb();
                 return;
             }
-            sversions.forEach(function(service_version) {
-                self.syncserviceversion(app, version, service, service_version, function(){
-                    if(++count>=sversions.length){
-                        count = null;
-                        sversions = null;
-                        cb();
-                    }
+            sids.forEach(function(node) {
+                self._tree.regist({
+                    app:app,
+                    app_version: version,
+                    service: service,
+                    sid: node,
                 });
+                if(++count>=sids.length){
+                    count = null;
+                    sids = null;
+                    cb();
+                }
             }, this);
         }
     );
@@ -416,6 +439,8 @@ ZkTreeSync.prototype.syncservice = function(app, version, service, cb){
 
 /**
  * app->app_version->service->service_version下面的服务节点内容
+ * service节点下面直接跟sid节点，提高系统的查找效率
+ * 某个服务版本的服务的查找，放到服务列表里面通过过滤的方式进行，因为这个是个低频操作
  */
 ZkTreeSync.prototype.syncserviceversion = function(app, version, service, service_version, cb){
     cb = cb?cb:noop;
@@ -449,6 +474,7 @@ ZkTreeSync.prototype.syncserviceversion = function(app, version, service, servic
                     app:app,
                     app_version: version,
                     service: service,
+                    service_version: service_version,
                     sid: node,
                 });
                 if(++count>=sids.length){

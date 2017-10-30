@@ -251,7 +251,9 @@ ZkPoolSync.prototype.syncservice = function(app, service,cb){
                     dataobj.url = data;
                 }
                 logger.info("dataobj: %s", JSON.stringify(dataobj));
-                var svc = self.pool.add(app, service, dataobj.url, stat.version);
+                var svc = self.pool.add(app, 
+                    {id: service, url: dataobj.url, version: dataobj.version}, 
+                    stat.version);
                 if(dataobj.enabled){
                     svc.enable();
                 }

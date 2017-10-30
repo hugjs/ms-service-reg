@@ -1,4 +1,4 @@
-
+require("../../log")
 var path = require('path');
 const logger = require('@log4js-node/log4js-api').getLogger(path.basename(module.id));
 var util = require('util');
@@ -25,8 +25,8 @@ describe('zk/treesync',function(){
         var pool = require('../../src/model/servicepool').init();
         before(function(done){
             // 先注册好两个服务
-            pool.add('base','service01','http://192.168.1.2:8081/svc01',"0.1.1");
-            pool.add('base','service02','http://192.168.1.3:8081/svc02',"0.1.2");
+            pool.add('base',{id:'service01',url:'http://192.168.1.2:8081/svc01',version:"0.1.1"},3);
+            pool.add('base',{id:'service02',url:'http://192.168.1.3:8081/svc02',version:"0.1.2"},3);
             done();
         });
         it('[P1] basic operations',function(done){

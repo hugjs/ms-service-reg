@@ -36,7 +36,7 @@ const DELIMITER = "/";
 var route_cache = {};
 
 /**
- * KEY=md5(app/app_version/service)， base/0.1.1/user
+ * KEY=md5(app/service_version/service)， base/0.1.1/user
  * Value=service 服务节点的数组
  */
 var service_version_cache = {};
@@ -45,6 +45,7 @@ var service_version_cache = {};
  * 当节点信息被添加的时候，更新缓存
  */
 Node.on('ChildAdded',function(data){
+    logger.info("ChildAdded: %s", JSON.stringify(data));
     // 节点被添加了，并且，当前被添加的节点是服务类型
     if(_.has(data,['parent','_id']) && _.has(data,['child','_id']) && data.child._type == Node.SERVICE){
         var key = _.join([data.child._app, data.parent._id, data.child._id], DELIMITER);
@@ -52,13 +53,13 @@ Node.on('ChildAdded',function(data){
         route_cache[key_md5] = data.child;
     }
     if(_.has(data,['parent','_id']) && _.has(data,['child','_id']) && data.child._type == Node.SERVICE_NODE){
-        var key = _.join([data.parent._app, data.child._version, data.parent._id], DELIMITER);
+        var key = _.join([data.parent._app, data.child._service_version, data.parent._id], DELIMITER);
         var key_md5 = crypto.createHash('md5').update(key).digest('hex');
         if(!service_version_cache[key_md5]) service_version_cache[key_md5] = {};
         service_version_cache[key_md5][data.child._id] = data.child;
     }
-    logger.debug('route_cache: ' + JSON.stringify(route_cache))
-    logger.debug('service_version_cache: ' + JSON.stringify(service_version_cache))
+    logger.info('route_cache: ' + route_cache.length)
+    logger.info('service_version_cache: ' + service_version_cache.length)
 });
 
 /**
@@ -91,7 +92,7 @@ exports.getService = function(app, app_version, service){
 /**
  * 获得某个版本的微服务的所有节点，可以跨不同app的版本
  */
-exports.getServiceWithVersion = function(app, service, service_version){
+exports.getServiceWithVersion = function(app, service){
     var key_md5 = crypto.createHash('md5').update(_.join([app, service, service_version], DELIMITER)).digest('hex');
     if(_.has(route_cache, key_md5)) return route_cache[key_md5];
     else return null;

@@ -8,7 +8,7 @@ const Koa = require('koa');
 const app = new Koa();
 var router = require(config.get("path.router"))
 
-log4js.configure(config.get("log"));
+require("./log")
 
 app
 .use(router.routes())

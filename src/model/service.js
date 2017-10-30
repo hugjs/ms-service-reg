@@ -30,6 +30,7 @@ function Service(options) {
     this._app = options.app;
     this._url = null;
     this._version = options.version?options.version:-1;
+    this._service_version = options.service_version;
     _.has(options,'url') && this.parse(options.url);
 }
 
@@ -91,7 +92,8 @@ Service.prototype.enabled = function(){
 Service.prototype.getServiceData = function(){
     return JSON.stringify({
         url: _.has(this._url,'href') ? this._url.href:"",
-        enabled: this._enable?1:0
+        enabled: this._enable?1:0,
+        version: this._service_version,
     });
 }
 
@@ -104,7 +106,7 @@ Service.prototype.getUrl = function(){
 }
 
 /**
- * 获取服务节点版本信息
+ * 获取服务节点版本信息（存储版本，不是业务逻辑版本）
  */
 Service.prototype.getVersion = function(){
     return this._version;

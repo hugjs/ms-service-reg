@@ -51,26 +51,26 @@ exports.init = function(options){
 /**
  * 往微服务列表里面增加一个微服务备用
  * @param app {string} 应用名称
- * @param id {string} 微服务ID
- * @param url {string} 微服务访问URL
- * @param version {string} 数据节点的版本号
+ * @param data.id {string} 微服务ID
+ * @param data.url {string} 微服务访问URL
+ * @param data.version {string} 数据节点的版本号
  */
-ServicePool.prototype.add = function(app, id, url, version){
+ServicePool.prototype.add = function(app, data, version){
     // 先查询有没有，如果有，就更新
-    var svc = this.get(app, id);
-    if(svc && svc._id === id){
-        svc.parse(url);
+    var svc = this.get(app, data.id);
+    if(svc && svc._id === data.id){
+        svc.parse(data.url);
         version && (svc._version = version);
         return svc;
     }
-    svc = new service({app:app, id:id, url:url, version:version});
-    if(svc && svc._id === id){
+    svc = new service({app:app, id:data.id, url:data.url, service_version: data.version, version:version});
+    if(svc && svc._id === data.id){
         if(!_.has(this.services, app)){
             this.services[app] = {};
         }
-        this.services[app][id] = svc;
+        this.services[app][data.id] = svc;
     }
-    logger.debug("After add %s: %s: %s", app, id, JSON.stringify(this.services));
+    logger.debug("After add %s-%s,size = %s", app, data.id, this.services.length);
     return svc;
 }
 

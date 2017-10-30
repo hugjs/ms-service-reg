@@ -1,6 +1,14 @@
 {
     // storage system will be initialized with this name
-    "storage": "zk",
+    "storage": {
+        "name":"zk",
+        "options":{
+            "zk":{
+                "url":"192.168.8.3:2181,192.168.8.3:2182"
+            },
+            "root":"/TEST_MICRO"
+        }
+    },
     // server configurations
     "server":{
         "port":20001

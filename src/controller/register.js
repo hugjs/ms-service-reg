@@ -15,7 +15,6 @@ var noop = function(){}
 var path = require('path');
 const logger = require('@log4js-node/log4js-api').getLogger(path.relative(process.cwd(),module.id));
 
-var version = require("@lqb/lib").version;
 var coparser = require('co-body');
 var _ = require('lodash');
 var svcPool = require('../model/servicepool').init()
@@ -55,8 +54,12 @@ exports.activate = async function(ctx, next){
     if(body.a && body.sid){
         // 根据sid启动服务
         var svc = svcPool.get(body.a, body.sid);
-        svc.enable();
-        ctx.body = {status:0}
+        if(svc){
+            svc.enable();
+            ctx.body = {status:0}
+        }else{
+            ctx.body = {status:1,msg:"service not found"}
+        }
         return await next();
     }else if(body.a && body.s && body.sv){
         var services = svcCache.getServiceWithVersion(body.a, body.s, body.sv);
