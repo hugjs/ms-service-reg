@@ -127,6 +127,7 @@ ServiceTree.prototype.regist = function(options, cb){
     if(!vNode){
         vNode = new Node({
             id: options.app_version, 
+            app: options.app,
             type: Node.APP_VERSION
         });
         appNode.add(vNode);
@@ -136,7 +137,8 @@ ServiceTree.prototype.regist = function(options, cb){
     if(!sNode){
         sNode = new Node({
             id: options.service, 
-            type: Node.SERVICE
+            app: options.app,
+            type: Node.SERVICE,
         });
         vNode.add(sNode);
     }
@@ -144,6 +146,7 @@ ServiceTree.prototype.regist = function(options, cb){
     var node = new Node({
         id: options.sid, 
         service: service, 
+        app: options.app,
         type: Node.SERVICE_NODE, 
         version: options.service_version
     }); 

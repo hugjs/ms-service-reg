@@ -36,7 +36,7 @@ const DELIMITER = "/";
 var route_cache = {};
 
 /**
- * KEY=md5(app/service_version/service)， base/0.1.1/user
+ * KEY=md5(app/service/service_version)， base/user/0.1.1
  * Value=service 服务节点的数组
  */
 var service_version_cache = {};
@@ -45,27 +45,30 @@ var service_version_cache = {};
  * 当节点信息被添加的时候，更新缓存
  */
 Node.on('ChildAdded',function(data){
-    logger.info("ChildAdded: %s", JSON.stringify(data));
+    logger.info("ChildAdded: %s added to %s", _.get(data,'child._id'), _.get(data,'parent._path'));
     // 节点被添加了，并且，当前被添加的节点是服务类型
     if(_.has(data,['parent','_id']) && _.has(data,['child','_id']) && data.child._type == Node.SERVICE){
         var key = _.join([data.child._app, data.parent._id, data.child._id], DELIMITER);
+        logger.debug("route_cache key=%s, value=", key, data.child._path)
         var key_md5 = crypto.createHash('md5').update(key).digest('hex');
         route_cache[key_md5] = data.child;
     }
     if(_.has(data,['parent','_id']) && _.has(data,['child','_id']) && data.child._type == Node.SERVICE_NODE){
-        var key = _.join([data.parent._app, data.child._service_version, data.parent._id], DELIMITER);
+        var key = _.join([data.parent._app, data.parent._id, data.child._version], DELIMITER);
+        logger.debug("service_version_cache key=%s, value=%s", key, data.child._path)
         var key_md5 = crypto.createHash('md5').update(key).digest('hex');
         if(!service_version_cache[key_md5]) service_version_cache[key_md5] = {};
         service_version_cache[key_md5][data.child._id] = data.child;
     }
-    logger.info('route_cache: ' + route_cache.length)
-    logger.info('service_version_cache: ' + service_version_cache.length)
+    logger.info('route_cache: ' + _.keys(route_cache).length)
+    logger.info('service_version_cache: ' + _.keys(service_version_cache).length)
 });
 
 /**
  * 当节点信息被删除的时候，更新缓存
  */
 Node.on('ChildRemoved',function(data){
+    logger.info("ChildRemoved: %s removed from %s", _.get(data,'child._id'), _.get(data,'parent._path'));
     if(_.has(data,['parent','_id']) && _.has(data,['child','_id']) && data.child._type == Node.SERVICE){
         var key = _.join([data.child._app, data.parent._id, data.child._id], DELIMITER);
         var key_md5 = crypto.createHash('md5').update(key).digest('hex');

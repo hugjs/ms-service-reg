@@ -97,7 +97,7 @@ ZkTreeSync.prototype.listen = function(){
     var self = this;
     // 某一个节点被添加到了父节点中，需要在zk中创建
     Node.on('ChildAdded',function(data){
-        logger.debug('zk/treesync ChildAdded: %s', JSON.stringify(data)) ;
+        logger.info("ChildAdded: %s added to %s", _.get(data,'child._id'), _.get(data,'parent._path'));
         if(!_.has(data, ['child','_path'])){
             logger.error('Node data fail. ChildAdded event data should contains path');
             return;
@@ -135,7 +135,7 @@ ZkTreeSync.prototype.listen = function(){
     });
 
     Node.on('ChildRemoved',function(data){
-        logger.debug('zk/treesync ChildRemoved: %s', JSON.stringify(data)) ;
+        logger.info("ChildRemoved: %s removed from %s", _.get(data,'child._id'), _.get(data,'parent._path'));
         if(!_.has(data, ['child','_path'])){
             logger.error('Node data fail. ChildRemoved event data should contains path');
             return;
@@ -230,6 +230,7 @@ ZkTreeSync.prototype.listen = function(){
     Node.on('ZombieTreeNode',function(data){
         var path = Util.format("%s/%s/%s/%s/%s", 
             self._root, data.app, data.app_version, data.service, data.sid);
+        logger.info("ZombieTreeNode ", path);
         self.zkclient.remove(path, -1,
             function(){
             },

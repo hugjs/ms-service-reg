@@ -141,9 +141,6 @@ exports.deactivate = async function(ctx, next){
  * @param {Object} options {a:"",av:"",s:"", sid:"", sv:""}
  */
 exports.regist = async function(ctx, next){
-    // ctx.body = {status:10, msg:"操作失败"}
-    // next();
-    // return;
     // 格式化请求报文数据
     var body = {}
     try{

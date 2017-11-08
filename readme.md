@@ -57,7 +57,7 @@
 3. 激活操作也可以在注册树这边调用接口激活。注册树这边，通常都是批量操作，统一对某个版本的服务进行激活或者取消激活
 4. 激活的状态需要保留下来，使得注册树服务即使重启了，服务节点的激活状态也是正确的。
 
-## 主版本切换 TODO
+## 主版本切换
 
 服务注册树中，每一个app都有自己的主版本和备用（测试、beta）版本。每次创建备用版本的时候，都只维护备用版本特殊的微服务节点，因此备用版本是所有微服务的一个子集。主版本包含了所有的线上微服务（测试的新微服务除外）。
 
@@ -74,12 +74,13 @@
 ## 服务注册树对外接口 TODO
 
 所有服务注册树都通过统一的接口提供对外的服务
-1. 获取请求URL接口（输入：app, app_version, service；输出：微服务访问的URL）
-2. 服务激活（输入：app, sid|service；输出：成功或者失败）
-3. 服务取消激活（输入：app, sid|service；输出：成功或者失败）
-4. 设置默认版本（输入：app, version；输出：成功或者失败）
-5. 创建ongo版本（输入：app；输出：新版本号）
-6. 切换主版本（输入：app, version；输出：成功或者失败）
+1. [x] 服务注册（输入：app, app_version, service, service_version, sid，输出：注册到注册树）
+2. [ ] 获取请求URL接口（输入：app, app_version, service；输出：微服务访问的URL）
+3. [ ] 服务激活（输入：app, sid|service；输出：成功或者失败）
+4. [ ] 服务取消激活（输入：app, sid|service；输出：成功或者失败）
+5. [ ] 设置默认版本（输入：app, version；输出：成功或者失败）
+6. [ ] 创建ongo版本（输入：app；输出：新版本号）
+7. [ ] 切换主版本（输入：app, version；输出：成功或者失败）
 
 
 
@@ -98,19 +99,23 @@
 
 引入库
 
-    # commonJS 语法
-    var lqbreg = require('@lqb/servicereg')
-    
-    # ES6 语法
-    import {*} from '@lqb/servicereg'
+
 
 # 版本更新记录
 
-0.0.4 移动servicepool.js到src/model下面
+**0.0.5**
+> 完成服务注册接口的开发和调试
+> 完成事件日志的优化，简化显示内容
 
-0.0.3 完成src/zk/servicepool.js
-用于维护微服务池
+**0.0.4**
+> 移动servicepool.js到src/model下面
 
-0.0.2 完成src/model/service.js
+**0.0.3**
+> 完成src/zk/servicepool.js
+> 用于维护微服务池
 
-0.0.1 初始版本
+**0.0.2** 
+> 完成src/model/service.js
+
+**0.0.1** 
+> 初始版本
