@@ -257,8 +257,8 @@ ZkTreeSync.prototype.sync = function(path, cb){
     path && this.zkclient.getChildren(
         path,
         function (event) {
-            logger.info('Got syncroot watcher event: %s', JSON.stringify(event));
-            event.type === zookeeper.Event.NODE_DELETED || self.syncroot(event.path);
+            logger.info('Got sync watcher event: %s', JSON.stringify(event));
+            event.type === zookeeper.Event.NODE_DELETED || self.sync(event.path);
         },
         function (error, apps, stat) {
             if (error) {

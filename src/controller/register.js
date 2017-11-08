@@ -141,6 +141,9 @@ exports.deactivate = async function(ctx, next){
  * @param {Object} options {a:"",av:"",s:"", sid:"", sv:""}
  */
 exports.regist = async function(ctx, next){
+    // ctx.body = {status:10, msg:"操作失败"}
+    // next();
+    // return;
     // 格式化请求报文数据
     var body = {}
     try{
@@ -151,23 +154,31 @@ exports.regist = async function(ctx, next){
     }
     // 数据校验
     var keys = ['a','av','s','sid','sv'];
-    if(_.intersection(_.keys(body), keys).length<keys.length){
+    if(_.pick(_.omitBy(body,_.isNil),keys).length < keys.length){
         ctx.body = {status:1, msg:"参数缺失"};
         return await next();
     }
-    svcTree.regist({
-        app: body.a,
-        app_version: body.av,
-        service: body.s,
-        sid: body.sid
-    },function(rst){
-        if(rst.status == 0){
-            ctx.body = {status:0}
-        }else{
-            ctx.body = {status:1, msg:"操作失败"}
-        }
-        return await next();
-    })
+    var prms = new Promise((resolve, reject)=>{
+            svcTree.regist({
+                app: body.a,
+                app_version: body.av,
+                service: body.s,
+                sid: body.sid
+            },function(rst){
+                if(rst.status == 0){
+                    resolve();
+                }else{
+                    reject(rst);
+                }
+            })
+        });
+    prms.then(function(){
+        ctx.body = {status:0}
+        next();
+    }).catch(function(reason){
+        ctx.body = reason.msg?reason:{status:1, msg:"操作失败"}
+        next();
+    });
 }
 
 

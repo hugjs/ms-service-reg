@@ -207,9 +207,9 @@ commander@^2.9.0:
   version "2.11.0"
   resolved "http://registry.npm.taobao.org/commander/download/commander-2.11.0.tgz#157152fd1e7a6c8d98a5b715cf376df928004563"
 
-config@^1.26.2:
-  version "1.26.2"
-  resolved "http://registry.npm.taobao.org/config/download/config-1.26.2.tgz#2466291168d8afae0aae8ab99ea4d4272f520cae"
+config@^1.28.0:
+  version "1.28.0"
+  resolved "http://registry.npm.taobao.org/config/download/config-1.28.0.tgz#666740053a81489905f26087c8656394c193507d"
   dependencies:
     json5 "0.4.0"
     os-homedir "1.0.2"
@@ -346,6 +346,12 @@ ecc-jsbn@~0.1.1:
 ee-first@1.1.1:
   version "1.1.1"
   resolved "http://registry.npm.taobao.org/ee-first/download/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
+
+encodings@^1.0.0:
+  version "1.0.0"
+  resolved "http://registry.npm.taobao.org/encodings/download/encodings-1.0.0.tgz#2fb8098ff36f64bb9fef5c8a512fa6f4dcec7bd5"
+  dependencies:
+    semver "5.3.0"
 
 error-inject@~1.0.0:
   version "1.0.0"
@@ -1162,7 +1168,7 @@ request@2.75.x:
     tough-cookie "~2.3.0"
     tunnel-agent "~0.4.1"
 
-request@^2.0.0, request@^2.74.0:
+request@^2.0.0, request@^2.74.0, request@^2.83.0:
   version "2.83.0"
   resolved "http://registry.npm.taobao.org/request/download/request-2.83.0.tgz#ca0b65da02ed62935887808e6f510381034e3356"
   dependencies:
@@ -1205,6 +1211,10 @@ requires-port@1.0.x:
 safe-buffer@^5.0.1, safe-buffer@^5.1.1, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.1"
   resolved "http://registry.npm.taobao.org/safe-buffer/download/safe-buffer-5.1.1.tgz#893312af69b2123def71f57889001671eeb2c853"
+
+semver@5.3.0:
+  version "5.3.0"
+  resolved "http://registry.npm.taobao.org/semver/download/semver-5.3.0.tgz#9b2ce5d3de02d17c6012ad326aa6b4d0cf54f94f"
 
 semver@^5.3.0:
   version "5.4.1"

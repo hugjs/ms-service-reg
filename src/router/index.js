@@ -14,7 +14,7 @@ router.use(async (ctx,next) => {
         await next();
         logger.info("%s, reps: %s",ctx.traceid, JSON.stringify(ctx.body?ctx.body:""));
     }catch(e){
-        logger.error("%s, error: %s",ctx.traceid, JSON.stringify(e));
+        logger.error("%s, error: %o",ctx.traceid, e);
     }
 });
 
@@ -25,6 +25,7 @@ router.use(async (ctx,next) => {
     await next();
 });
 
+router.post('/regist', registerCtrl.regist);
 router.post('/activate', registerCtrl.activate);
 
 module.exports = router;

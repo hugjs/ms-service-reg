@@ -104,14 +104,15 @@ ServiceTree.prototype.regist = function(options, cb){
     var keys = ['app','app_version','service','sid'];
     if(_.intersection(_.keys(options), keys).length<keys.length){
         cb({status:1, msg:"参数缺失"});
-        return false;
+        return;
     }
     var service = pool.get(options.app, options.sid);
     if(!service) {
         logger.error('Service Tree regist failed. SID not found in pool: %s', JSON.stringify(options));
         // 清理注册树（注册树和服务池没有同步，导致的数据差异）
         Node.emit('ZombieTreeNode', options);
-        return false;
+        cb({status:10, msg:"微服务节点信息没有在服务池中找到"});
+        return;
     }
 
     // 初始化应用版本如果没有提供的话，直接用当前的默认版本
@@ -147,7 +148,7 @@ ServiceTree.prototype.regist = function(options, cb){
         version: options.service_version
     }); 
     sNode.add(node);
-    return true;
+    cb({status:0, msg:"操作成功"});
 
 }
 
