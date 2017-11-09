@@ -76,11 +76,12 @@
 所有服务注册树都通过统一的接口提供对外的服务
 1. [x] 服务注册（输入：app, app_version, service, service_version, sid，输出：注册到注册树）
 2. [ ] 获取请求URL接口（输入：app, app_version, service；输出：微服务访问的URL）
-3. [ ] 服务激活（输入：app, sid|service；输出：成功或者失败）
-4. [ ] 服务取消激活（输入：app, sid|service；输出：成功或者失败）
-5. [ ] 设置默认版本（输入：app, version；输出：成功或者失败）
-6. [ ] 创建ongo版本（输入：app；输出：新版本号）
+3. [x] 服务激活（输入：app, sid|service；输出：成功或者失败）
+4. [x] 服务取消激活（输入：app, sid|service；输出：成功或者失败）
+5. [x] 设置默认版本（输入：app, version；输出：成功或者失败）
+6. [-] 创建ongo版本（输入：app；输出：新版本号）**取消**
 7. [ ] 切换主版本（输入：app, version；输出：成功或者失败）
+8. [ ] 查看应用的版本号信息（输入：app；输出：应用的版本号列表和当前的默认版本号）
 
 
 

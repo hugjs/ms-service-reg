@@ -182,6 +182,10 @@ Node.prototype.setDefault = function(value, cb){
   cb = cb?cb:noop;
   var self = this;
   var opsid = cuid(); // 唯一操作号
+  if(!self.child(value)){
+    cb({status:1, msg:'版本号不存在'})
+    return;
+  }
   if(self._type == TYPES.APP) {
     module.exports.emit('TrySetDefault', {app: self, current: self._default, newvalue: value, opsid: opsid});
   }

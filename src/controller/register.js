@@ -43,6 +43,7 @@ exports.activate = async function(ctx, next){
     var body = {}
     try{
         body = await coparser.json(ctx)
+        logger.info("%s, ctx.req.body: %s",ctx.traceid, JSON.stringify(body));
     }catch(e){
         logger.error(e);
         return await next();
@@ -64,7 +65,9 @@ exports.activate = async function(ctx, next){
         return await next();
     }else if(body.a && body.s && body.sv){
         var services = svcCache.getServiceWithVersion(body.a, body.s, body.sv);
+        logger.debug(services);
         _.forEach(services, function(service){
+            logger.debug("Enable Service: ", service._path )
             service.enable();
         })
         ctx.body = {status:0}
@@ -192,7 +195,7 @@ exports.regist = async function(ctx, next){
  * 
  * @param {Object} options {a:"",av:"",s:"", sid:"", sv:""}
  */
-function unregist(options){
+exports.unregist = async function(ctx, next){
     
 }
 
@@ -206,6 +209,32 @@ function unregist(options){
  * 
  * @param {Object} options {a:"",av:""}
  */
-function setDefault(options){
-
+exports.setDefault = async function(ctx, next){
+    // 格式化请求报文数据
+    var body = {}
+    try{
+        body = await coparser.json(ctx)
+    }catch(e){
+        logger.error(e);
+        return await next();
+    }
+    // 数据校验
+    var keys = ['a','av'];
+    if(_.pick(_.omitBy(body,_.isNil),keys).length < keys.length){
+        ctx.body = {status:1, msg:"参数缺失"};
+        return await next();
+    }
+    var app = svcTree.getApp(body.a);
+    try{
+        await new Promise((resolve, reject)=>{
+            app.setDefault(body.av,function(rst){
+                if(rst && rst.status == 0) resolve();
+                reject(rst);
+            })
+        })
+        ctx.body = {status:0, msg:"成功"};
+    }catch(e){
+        ctx.body = e;
+    }
+    return await next();
 }

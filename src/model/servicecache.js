@@ -58,7 +58,7 @@ Node.on('ChildAdded',function(data){
         logger.debug("service_version_cache key=%s, value=%s", key, data.child._path)
         var key_md5 = crypto.createHash('md5').update(key).digest('hex');
         if(!service_version_cache[key_md5]) service_version_cache[key_md5] = {};
-        service_version_cache[key_md5][data.child._id] = data.child;
+        service_version_cache[key_md5][data.child._id] = data.child._service;
     }
     logger.info('route_cache: ' + _.keys(route_cache).length)
     logger.info('service_version_cache: ' + _.keys(service_version_cache).length)
@@ -95,9 +95,10 @@ exports.getService = function(app, app_version, service){
 /**
  * 获得某个版本的微服务的所有节点，可以跨不同app的版本
  */
-exports.getServiceWithVersion = function(app, service){
+exports.getServiceWithVersion = function(app, service, service_version){
+    logger.debug('key=',_.join([app, service, service_version], DELIMITER));
     var key_md5 = crypto.createHash('md5').update(_.join([app, service, service_version], DELIMITER)).digest('hex');
-    if(_.has(route_cache, key_md5)) return route_cache[key_md5];
+    if(_.has(service_version_cache, key_md5)) return service_version_cache[key_md5];
     else return null;
 }
 
