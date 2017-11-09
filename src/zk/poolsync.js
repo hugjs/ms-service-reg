@@ -42,7 +42,7 @@ function ZkPoolSync(options){
      */
     self.zkclient = null;
     
-    self.zkclient = zookeeper.createClient(options.zk.url); // init zookeeper client
+    self.zkclient = zookeeper.createClient(options.zk.url, options.zk.options?options.zk.options:null); // init zookeeper client
     self.zkclient.once('connected', function () {
         logger.info('Connected to ZooKeeper.');
         // 开始监听事件
