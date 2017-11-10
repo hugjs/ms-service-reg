@@ -70,7 +70,7 @@ exports.init = function(options){
  *
  * 
  */
-ServiceTree.prototype.getSVNode = function(options){
+ServiceTree.prototype.getSNode = function(options){
     var appNode = this.getApp(options.app);
     if(!appNode) return false;
     if(!options.app_version) options.app_version = appNode.default();
@@ -78,9 +78,7 @@ ServiceTree.prototype.getSVNode = function(options){
     if(!vNode) return false;
     var sNode = vNode.child(options.service);
     if(!sNode) return false;
-    var svNode = vNode.child(options.service_version);
-    if(!svNode) return false;
-    return svNode;
+    return sNode;
 
 }
 
@@ -173,7 +171,7 @@ ServiceTree.prototype.regist = function(options, cb){
  * 
  */
 ServiceTree.prototype.unregist = function(options){
-    var svNode = this.getSVNode(options);
+    var svNode = this.getSNode(options);
     if(!svNode) return false;
     svNode.remove(options.sid);
     return true;
@@ -199,12 +197,59 @@ ServiceTree.prototype.addApp = function(app){
 
 
 /**
+ * 获得满足某些条件的服务节点数组
+ * 
+ * 结果中，首先自动过滤掉非激活的节点
+ * 
+ * @param {Object} options 查询参数
+ * 
+ * options.app 必填，应用名称
+ * options.app_version 应用版本，默认为默认版本
+ * options.service 必填，服务名称
+ * 
+ * ## Exceptions:
+ * 
+ * 如果app或者service没有传入，那么系统会抛出异常
+ * 
+ * @returns 返回${service}对象的集合
+ * 
+ */
+ServiceTree.prototype.getServices = async function(options){
+    // 检查系统的
+    var keys = ['app','service']
+    if(_.keys(_.pick(_.omitBy(options,_.isNil),keys)).length < keys.length){
+        logger.error('ServiceTree.getServices missing options', options)
+        throw new Error('参数错误');
+    }
+    var sNode = this.getSNode(options)
+    if(!sNode){
+        return [];
+    }
+    var rst = [];
+    try{
+        await new Promise((resolve, reject)=>{
+            var i = _.keys(sNode.getChildren()).length;
+            _.forEach(sNode.getChildren(),(child)=>{
+                child._type == Node.SERVICE_NODE && rst.push(child._service);
+                --i;
+                if(i<=0) resolve();
+            })
+        })
+    }catch(e){
+        logger.error('Iter sNode._children failed. ', e);
+    }
+    
+    return _.remove(rst, (n)=>{
+        if(n && n.enabled()) return true;
+        return false;
+    });
+}
+
+
+
+/**
  * 提供模块直接访问的入口
  */
 exports.regist = function(options){
     return exports.init().regist(options);
 }
-
-/**
- * 
- */

@@ -102,7 +102,7 @@ Service.prototype.getServiceData = function(){
  * 获取服务节点URL信息
  */
 Service.prototype.getUrl = function(){
-    return this._url;
+    return this._url.href?this._url.href:"";
 }
 
 /**

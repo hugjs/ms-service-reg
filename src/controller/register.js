@@ -20,6 +20,7 @@ var _ = require('lodash');
 var svcPool = require('../model/servicepool').init()
 var svcTree = require('../model/tree').init()
 var svcCache = require('../model/servicecache')
+var loadBalance = require('../loadbalance')
 
 
 /**
@@ -154,7 +155,7 @@ exports.regist = async function(ctx, next){
     }
     // 数据校验
     var keys = ['a','av','s','sid','sv'];
-    if(_.pick(_.omitBy(body,_.isNil),keys).length < keys.length){
+    if(_.keys(_.pick(_.omitBy(body,_.isNil),keys)).length < keys.length){
         ctx.body = {status:1, msg:"参数缺失"};
         return await next();
     }
@@ -220,7 +221,7 @@ exports.setDefault = async function(ctx, next){
     }
     // 数据校验
     var keys = ['a','av'];
-    if(_.pick(_.omitBy(body,_.isNil),keys).length < keys.length){
+    if(_.keys(_.pick(_.omitBy(body,_.isNil),keys)).length < keys.length){
         ctx.body = {status:1, msg:"参数缺失"};
         return await next();
     }
@@ -235,6 +236,48 @@ exports.setDefault = async function(ctx, next){
         ctx.body = {status:0, msg:"成功"};
     }catch(e){
         ctx.body = e;
+    }
+    return await next();
+}
+
+/**
+ * 获取某个服务访问的url
+ * 
+ * ## 参数说明：
+ * a: appid
+ * av: app_version应用版本，如果没有提供，使用默认版本
+ * s: 微服务的名称
+ * 
+ * 
+ * @param {Object} options {a:"",av:"",s:""}
+ */
+exports.url = async function(ctx, next){
+    // 格式化请求报文数据
+    var body = {}
+    try{
+        body = await coparser.json(ctx)
+        logger.info('url', body)
+    }catch(e){
+        logger.error(e);
+        return await next();
+    }
+    // 数据校验
+    var keys = ['a','av','s'];
+    if(_.keys(_.pick(_.omitBy(body,_.isNil),keys)).length < keys.length){
+        ctx.body = {status:1, msg:"参数缺失"};
+        return await next();
+    }
+
+    try{
+        var services = await svcTree.getServices({
+            app:body.a, 
+            app_version:body.av, 
+            service: body.s});
+        ctx.body = {status:0, url: await loadBalance.pick(services)};
+    }catch(e){
+        logger.error(e);
+        ctx.body = {status:2, msg:"获取连接URL异常"};
+        return await next();
     }
     return await next();
 }

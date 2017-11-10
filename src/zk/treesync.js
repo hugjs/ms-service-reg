@@ -39,7 +39,7 @@ function ZkTreeSync(options){
      */
     self._pool = svcpool.init();
     
-    self._root = options.root? options.root:ROOT;
+    self._root = options.treeroot? options.treeroot:ROOT;
     self._tree = svctree.init({root:self._root});
 
     /**
@@ -50,6 +50,7 @@ function ZkTreeSync(options){
     self.zkclient = zookeeper.createClient(options.zk.url, options.zk.options?options.zk.options:null); // init zookeeper client
     self.zkclient.once('connected', function () {
         logger.info('Connected to ZooKeeper.');
+        setInterval(()=>{self.zkclient.exists("/",null, ()=>{})}, _.has(options,'zk.options.sessionTimeout')?options.zk.options.sessionTimeout:2000);
         // 开始监听事件
         self.listen();
         // 初始化根目录
@@ -82,6 +83,11 @@ function ZkTreeSync(options){
                 }
         })
         
+    });
+
+    self.zkclient.on('disconnected', function () {
+        logger.error('zkclient disconnected rebooting')
+        process.exit()
     });
     
     self.zkclient.connect();

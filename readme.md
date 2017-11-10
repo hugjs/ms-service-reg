@@ -12,9 +12,18 @@
 服务发现方案中，使用zookeeper作为服务存储介质，通过[node-zookeeper-client](https://www.npmjs.com/package/node-zookeeper-client)项目访问zookeeper集群。
 
 服务注册表的设计如下图所示：
+
 ![](http://otn252ndm.bkt.clouddn.com/17-8-16/3944039.jpg)
 
 # 核心设计思想
+
+整个微服务系统由`应用`和`微服务`两个核心概念组成。系统通过`应用`对`微服务`进行分组。同一个`微服务`可以被注册（关联）到不同的`应用`上，但是为了后面的服务治理的方便，不建议这么做。
+
+微服务首先需要注册到`服务节点池`中，在系统中先声明一个可用服务。然后，再把微服务注册到`服务注册树`中，形成与某个应用版本的关联。
+
+如下图所示：
+
+![](http://otn252ndm.bkt.clouddn.com/17-11-10/80300405.jpg)
 
 ## 服务节点池
 
@@ -33,6 +42,19 @@
 
 服务登记到节点池的时候，默认是待机状态，流量不会导入，需要手动启用之后才会对外服务。这样的好处是能够实现灰度发布。
 
+### 服务节点池的数据结构
+
+![](http://otn252ndm.bkt.clouddn.com/17-11-10/29277249.jpg)
+
+    /${ROOT}/${app}/${sid}
+
+* ROOT是注册树的根目录，默认是`/MICRO/services`，可以通过配置`storage.options.poolroot`修改
+* app是应用的名称
+* sid是微服务节点的SID。节点的数据是微服务注册时留下的服务信息。数据结构如下：
+    - url 微服务访问的url
+    - enabled 服务是否激活（0=未激活，1=激活）
+    - version 微服务的版本号
+
 ## 服务注册树
 
 负责记录不同的APP版本下，支持哪些微服务。微服务登记之后，需要注册到服务注册树才能被识别和导入流量。
@@ -42,6 +64,26 @@
 2. 需要能够快速找到某个版本的某个服务的服务节点集合（根据app，app_version，service）
 3. 需要支持持久化，服务重启之后能够被快速恢复
 4. 默认版本迁移的时候，能够自动合并缺失的父版本节点下面的服务
+
+### 服务注册树的数据结构
+
+![](http://otn252ndm.bkt.clouddn.com/17-11-10/71493237.jpg)
+
+    /${ROOT}/${app}/${app_version}/${service}/${sid}
+
+* ROOT是注册树的根目录，默认是`/MICRO/apps`，可以通过配置`storage.options.treeroot`修改
+* app是应用的名称
+* app_version是应用的版本
+* service是服务的名称
+* sid是微服务节点的SID。本节点下不存储数据，只存储id。所有的微服务信息通过服务池获取。
+
+### 应用默认版本的数据结构
+
+    /${ROOT}/${app}/_default
+
+* ROOT是注册树的根目录，默认是`/MICRO/apps`，可以通过配置`storage.options.root`修改
+* app是应用的名称
+* _default, 用于存储应用的默认版本信息。
 
 ## 节点的激活
 
@@ -71,11 +113,11 @@
 
 首先，实现第二种方式，做到小版本升级和ABTest支持。再支持第一种方式。
 
-## 服务注册树对外接口 TODO
+## 服务注册树对外接口
 
 所有服务注册树都通过统一的接口提供对外的服务
 1. [x] 服务注册（输入：app, app_version, service, service_version, sid，输出：注册到注册树）
-2. [ ] 获取请求URL接口（输入：app, app_version, service；输出：微服务访问的URL）
+2. [x] 获取请求URL接口（输入：app, app_version, service；输出：微服务访问的URL）
 3. [x] 服务激活（输入：app, sid|service；输出：成功或者失败）
 4. [x] 服务取消激活（输入：app, sid|service；输出：成功或者失败）
 5. [x] 设置默认版本（输入：app, version；输出：成功或者失败）

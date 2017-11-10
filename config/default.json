@@ -9,13 +9,15 @@
                     "sessionTimeout": 10000
                 }
             },
-            "root":"/TEST_MICRO"
+            "poolroot":"/TEST_MICRO/services",
+            "treeroot":"/TEST_MICRO/apps"
         }
     },
     // server configurations
     "server":{
         "port":20001
     },
+    "loadbalance":"P2cBalancer",
     // log configurations
     "log":{
         "appenders": {

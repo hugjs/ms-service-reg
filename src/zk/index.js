@@ -39,19 +39,9 @@ function ZooKeeper(options){
     });
     poolsync.once('ready',function(){
         logger.debug("poolsync ready");
-        treesync.init({
-            zk:{
-                url:options.zk.url
-            }, 
-            root: options.root + (options.apps?options.apps:'/apps')
-        });
+        treesync.init(options);
     });
-    poolsync.init({
-        zk:{
-            url:options.zk.url
-        },
-        root: options.root + (options.services?options.services:'/services')
-    });
+    poolsync.init(options);
 }
 
 // 支持事件模型

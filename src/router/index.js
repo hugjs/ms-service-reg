@@ -31,5 +31,6 @@ router.post('/regist', registerCtrl.regist);
 router.post('/activate', registerCtrl.activate);
 router.post('/deactivate', registerCtrl.deactivate);
 router.post('/setdefault', registerCtrl.setDefault);
+router.post('/url', registerCtrl.url);
 
 module.exports = router;
