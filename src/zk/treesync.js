@@ -15,6 +15,7 @@ var zookeeper = require('node-zookeeper-client');
 
 var svcpool = require('../model/servicepool');
 var svctree = require('../model/tree');
+var zkhelper = require('./help')
 
 var Node = require('../model/node')
 
@@ -48,9 +49,9 @@ function ZkTreeSync(options){
     self.zkclient = null;
     
     self.zkclient = zookeeper.createClient(options.zk.url, options.zk.options?options.zk.options:null); // init zookeeper client
+    zkhelper.addlogs(self.zkclient, 'treesync');
     self.zkclient.once('connected', function () {
         logger.info('Connected to ZooKeeper.');
-        setInterval(()=>{self.zkclient.exists("/",null, ()=>{})}, _.has(options,'zk.options.sessionTimeout')?options.zk.options.sessionTimeout:2000);
         // 开始监听事件
         self.listen();
         // 初始化根目录
@@ -85,8 +86,8 @@ function ZkTreeSync(options){
         
     });
 
-    self.zkclient.on('disconnected', function () {
-        logger.error('zkclient disconnected rebooting')
+    self.zkclient.on('expired', function () {
+        logger.error('zkclient expired')
         process.exit()
     });
     
