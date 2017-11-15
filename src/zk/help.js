@@ -9,7 +9,7 @@ exports.addlogs = function(client, domain){
         try{
             setInterval(()=>{
                     client.exists("/",null, ()=>{
-                        logger.debug(domain, 'check exists');
+                        logger.trace(domain, 'check exists');
                     })
                 }, 
                 client.options.sessionTimeout || 2000

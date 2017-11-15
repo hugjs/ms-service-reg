@@ -238,11 +238,16 @@ ServiceTree.prototype.getServices = async function(options){
     }catch(e){
         logger.error('Iter sNode._children failed. ', e);
     }
-    
-    return _.remove(rst, (n)=>{
+    var ret = _.remove(rst, (n)=>{
         if(n && n.enabled()) return true;
         return false;
     });
+    if(ret.length>0) return ret;
+    // 如果没有值，需要通过默认版本重新获取一次
+    if(options.app_version) {
+        options.app_version = undefined;
+        return await this.getServices(options);
+    } else return [];
 }
 
 
