@@ -5,12 +5,13 @@ var path = require('path');
 var log4js = require('log4js');
 const logger = require('@log4js-node/log4js-api').getLogger(path.basename(module.id));
 const Koa = require('koa');
-const app = new Koa();
+const websockify = require('koa-websocket');
+const app = websockify(new Koa());
 var router = require(config.get("path.router"))
 
 require("./log")
 
-app
+app.ws
 .use(router.routes())
 .use(router.allowedMethods());
  

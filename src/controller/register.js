@@ -262,7 +262,7 @@ exports.url = async function(ctx, next){
         return await next();
     }
     // 数据校验
-    var keys = ['a','av','s'];
+    var keys = ['a','s'];
     if(_.keys(_.pick(_.omitBy(body,_.isNil),keys)).length < keys.length){
         ctx.body = {status:1, msg:"参数缺失"};
         return await next();
