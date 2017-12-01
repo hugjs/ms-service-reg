@@ -1,10 +1,13 @@
 const WebSocket = require('ws');
 
-const ws = new WebSocket('ws://localhost/ws-url');
+const ws = new WebSocket('ws://localhost:20001/ws-url');
 
 ws.on('open', function open() {
  console.log('connected');
- ws.send(Date.now());
+ ws.send(JSON.stringify({
+   a:"base",
+   s:"echo"
+ }));
 });
 
 ws.on('close', function close() {
@@ -12,9 +15,5 @@ ws.on('close', function close() {
 });
 
 ws.on('message', function incoming(data) {
- console.log(`Roundtrip time: ${Date.now() - data} ms`);
-
- setTimeout(function timeout() {
-   ws.send(Date.now());
- }, 500);
+ console.log(`new message: ${data}`);
 });

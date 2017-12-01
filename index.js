@@ -1,11 +1,11 @@
 
-var config = require('config')
-var strg = require("./src/" + config.get('storage.name'))
-var noop = function(){}
-var path = require('path');
+const config = require('config')
+const noop = function(){}
+const path = require('path');
 const logger = require('@log4js-node/log4js-api').getLogger("app.index");
-
 require('./log')
+
+const strg = require("./src/" + config.get('storage.name'))
 
 strg.once('ready',function(){
     logger.info('Storage Ready.....');

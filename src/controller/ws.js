@@ -1,6 +1,7 @@
 const noop = function(){}
 const path = require('path');
 const logger = require('@log4js-node/log4js-api').getLogger('controller.ws');
+const _ = require('lodash')
 
 const svcTree = require('../model/tree').init()
 const svcCache = require('../model/servicecache')
@@ -18,8 +19,11 @@ const loadBalance = require('../loadbalance')
  * 
  * @param {Object} options {a:"",av:"",s:""}
  */
-exports.url = function(ctx, next){
+exports.enter = function(ctx, next){
+    logger.debug('in the url');
+    ctx.websocket.send('url connected');
     ctx.websocket.on('message', function(message) {
+        logger.info("message received: " + message);
         // 格式化请求报文数据
         var body = {}
         try{
@@ -38,11 +42,20 @@ exports.url = function(ctx, next){
         }
     
         try{
-            var services = svcTree.getServices({
+            svcTree.getServices({
                 app:body.a, 
                 app_version:body.av, 
-                service: body.s});
-            ctx.websocket.send(JSON.stringify({status:0, url: await loadBalance.pick(services)}));
+                service: body.s}).then(function(services){
+                    logger.debug("services:" + JSON.stringify(services));
+                    return loadBalance.pick(services)
+                }).then(function(url){
+                    logger.debug("url:" + url);
+                    if(url)
+                        ctx.websocket.send(JSON.stringify({status:0, url: url }));
+                    else 
+                        ctx.websocket.send(JSON.stringify({status:1, msg: "无法找到路由信息" }));
+                });
+            
         }catch(e){
             logger.error(e);
             ctx.websocket.send(JSON.stringify({status:2, msg:"获取连接URL异常"}));

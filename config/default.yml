@@ -4,7 +4,7 @@ storage:
     name: zk
     options:
         zk:
-            url: 192.168.8.3:2182,192.168.8.3:2183,192.168.8.3:2184
+            url: 192.168.6.3:2182,192.168.6.3:2183,192.168.6.3:2184
             options:
                 sessionTimeout: 10000
         poolroot: /TEST_MICRO/services

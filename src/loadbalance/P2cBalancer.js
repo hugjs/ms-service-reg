@@ -11,5 +11,5 @@ const P2cBalancer = require('load-balancers').P2cBalancer
 exports.pick = async function(services){
     const balancer = new P2cBalancer(services.length);
     const service = services[balancer.pick()];
-    return service.getUrl();
+    return service?service.getUrl():null;
 }

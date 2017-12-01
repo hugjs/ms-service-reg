@@ -4,7 +4,6 @@ const logger = require('@log4js-node/log4js-api').getLogger(path.relative(proces
 var Router = require('koa-router');
 var router = new Router();
 var registerCtrl = require('../controller/register')
-var wsCtrl = require('../controller/ws')
 var cuid = require('cuid');
 var coparser = require('co-body');
 
@@ -33,6 +32,5 @@ router.post('/activate', registerCtrl.activate);
 router.post('/deactivate', registerCtrl.deactivate);
 router.post('/setdefault', registerCtrl.setDefault);
 router.post('/url', registerCtrl.url);
-router.post('/ws-url', registerCtrl.route);
 
 module.exports = router;
